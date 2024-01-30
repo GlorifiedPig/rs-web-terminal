@@ -1,4 +1,5 @@
 
+mod commands;
 use socketioxide::{extract::{Data, SocketRef}, SocketIo};
 use axum::{routing::get, response, Router};
 use std::fs;
@@ -10,6 +11,8 @@ async fn index() -> response::Html<String> {
 
 #[tokio::main]
 async fn main() {
+    commands::create_commands();
+
     let (layer, io) = SocketIo::new_layer();
 
     io.ns("/", |s: SocketRef| {
