@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1e1e1e;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #output {
+            width: 650px;
+            height: 320px;
+            resize: none;
+            font-family: Consolas;
+            font-size: 11px;
+            overflow-y: scroll;
+            background-color: #050505;
+            color: white;
+            outline: none;
+            padding: 5px;
+            border: 0;
+        }
+
+        #output:focus {
+            border: 0;
+        }
+
+        #input {
+            width: 530px;
+            height: 30px;
+            margin-top: 10px;
+            font-family: Consolas;
+            background-color: #050505;
+            color: white;
+            outline: none;
+            padding: 3px;
+            border: 0;
+        }
+
+        #input:focus {
+            border: 0;
+        }
+
+        #button {
+            width: 120px;
+            height: 37px;
+            margin-top: 10px;
+            font-family: Consolas;
+            background-color: #050505;
+            color: white;
+            outline: none;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <textarea id="output" rows="10" cols="50" readonly>---------------------------------------
+Welcome to the Terminal
+Type "help" for command list
+---------------------------------------
+</textarea>
+        <div>
+            <input id="input" type="text" placeholder="Enter command" autofocus onkeydown="handleKeyDown(event)">
+            <button id="button" onclick="sendCommand()">Submit</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        var socket = io.connect("http://" + document.domain + ":" + location.port);
+        var input_element = document.getElementById("input");
+        var output_element = document.getElementById("output");
+        var latest_inputs = []
+        var input_counter = -1
+
+        function get_previous_input() {
+            if(input_counter == -1) return;
+
+            input_counter = Math.max(-1, input_counter - 1);
+            
+            if(input_counter == -1) {
+                input_element.value = "";
+                return;
+            }
+
+            input_element.value = latest_inputs[input_counter];
+        }
+
+        function get_next_input() {
+            if(input_counter == latest_inputs.length - 1) return;
+
+            input_counter = Math.min(latest_inputs.length - 1, input_counter + 1);
+            input_element.value = latest_inputs[input_counter];
+        }
+
+        socket.on("result", function(result) {
+            output_element.value += result + "\n";
+            scrollOutputToBottom();
+        });
+
+        function sendCommand() {
+            var command = input_element.value;
+
+            if(command.trim() == "") return; // Don't allow a whitespace only command to get sent.
+
+            input_element.value = "";
+
+            if(command == "clear") {
+                output_element.value = "";
+                return;
+            }
+            
+            latest_inputs.unshift(command);
+            input_counter = -1;
+
+            output_element.value += "> " + command + "\n";
+            socket.emit("command", command);
+            scrollOutputToBottom();
+            input_element.focus();
+        }
+
+        function scrollOutputToBottom() {
+            output_element.scrollTop = output_element.scrollHeight;
+        }
+
+        function handleKeyDown(event) {
+            if(event.key == "Enter") {
+                sendCommand();
+            } else if(event.key == "ArrowUp") {
+                get_next_input();
+                event.preventDefault();
+            } else if(event.key == "ArrowDown") {
+                get_previous_input();
+                event.preventDefault();
+            }
+        }
+    </script>
+</body>
+</html>
