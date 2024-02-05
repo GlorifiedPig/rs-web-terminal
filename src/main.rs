@@ -18,9 +18,19 @@ async fn main() {
     io.ns("/", |s: SocketRef| {
         s.on("command", |s: SocketRef, Data::<String>(data)| {
             let mut args: Vec<String> = data.split(" ").map(|s| s.to_string()).collect();
-            let command: String = args.remove(0);
-            let found: bool = commands::COMMANDS.lock().unwrap().iter().any(|c| c.command == command);
-            s.emit("result", format!("Received {}, found?: {}", data, found.to_string())).ok();
+            let command_str: String = args.remove(0);
+            let binding = commands::COMMANDS.lock().unwrap();
+            let command: Option<&commands::Command> = binding.iter().find(|c| c.command == command_str);
+
+            match command {
+                Some(c) => {
+                    let result: String = (c.callback)(args);
+                    s.emit("result", result).ok();
+                },
+                None => {
+                    s.emit("result", format!("Command {} not found", command_str)).ok();
+                }
+            }
         });
     });
 
