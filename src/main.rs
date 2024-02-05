@@ -1,6 +1,4 @@
 
-extern crate lazy_static;
-
 mod commands;
 use socketioxide::{extract::{Data, SocketRef}, SocketIo};
 use axum::{routing::get, response, Router};

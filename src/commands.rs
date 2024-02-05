@@ -26,5 +26,8 @@ pub fn create_commands() {
         callback: help,
     };
 
+    // get current date command
+    // maybe a basic regex parser
+
     COMMANDS.lock().unwrap().push(help_command);
 }
