@@ -1,4 +1,6 @@
 
+extern crate lazy_static;
+
 mod commands;
 use socketioxide::{extract::{Data, SocketRef}, SocketIo};
 use axum::{routing::get, response, Router};
@@ -17,7 +19,10 @@ async fn main() {
 
     io.ns("/", |s: SocketRef| {
         s.on("command", |s: SocketRef, Data::<String>(data)| {
-            s.emit("result", format!("Received {}", data)).ok();
+            let mut args: Vec<String> = data.split(" ").map(|s| s.to_string()).collect();
+            let command: String = args.remove(0);
+            let found: bool = commands::COMMANDS.lock().unwrap().iter().any(|c| c.command == command);
+            s.emit("result", format!("Received {}, found?: {}", data, found.to_string())).ok();
         });
     });
 

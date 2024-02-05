@@ -1,28 +1,30 @@
 
+use std::sync::Mutex;
+
+type CommandCallback = fn(Vec<String>) -> String;
+
 pub struct Command {
-    command: String,
-    description: String,
-    callback: Box<dyn Fn(Vec<String>) -> String>,
+    pub command: &'static str,
+    pub description: &'static str,
+    pub callback: CommandCallback,
 }
 
-pub fn create_commands() -> Vec<Command> {
-    let mut commands: Vec<Command> = Vec::new();
+pub static COMMANDS: Mutex<Vec<Command>> = Mutex::new(Vec::new());
 
-    let help = |args: Vec<String>| { // FIXME
+pub fn create_commands() {
+    let help: CommandCallback = |_args: Vec<String>| {
         let mut help_message: String = String::from("Available commands:\n");
-        for command in commands.iter_mut() {
+        for command in COMMANDS.lock().unwrap().iter() {
             help_message.push_str(&format!("{} - {}\n", command.command, command.description));
         }
         help_message
     };
 
     let help_command: Command = Command {
-        command: "help".to_string(),
-        description: "Shows this help message".to_string(),
-        callback: Box::new(help),
+        command: "help",
+        description: "Shows this help message",
+        callback: help,
     };
 
-    commands.push(help_command);
-
-    commands
+    COMMANDS.lock().unwrap().push(help_command);
 }
