@@ -26,12 +26,26 @@ pub fn create_commands() {
     let help: Command = Command {
         command: "help",
         description: "Shows this help message",
-        callback: |_args: Vec<String>| {
-            let mut help_message: String = String::from("Available commands:");
-            for command in COMMANDS.read().unwrap().iter() {
-                help_message.push_str(&format!("\n{} - {}", command.command, command.description));
+        callback: |args: Vec<String>| {
+            let commands = COMMANDS.read().unwrap();
+
+            if args.len() > 0 {
+                let command: Option<&Command> = commands.iter().find(|c| c.command == args[0]);
+                match command {
+                    Some(c) => {
+                        return format!("{} - {}", c.command, c.description);
+                    },
+                    None => {
+                        return format!("Command {} not found", args[0]);
+                    }
+                }
+            } else {
+                let mut help_message: String = String::from("Available commands:");
+                for command in commands.iter() {
+                    help_message.push_str(&format!("\n{} - {}", command.command, command.description));
+                }
+                help_message
             }
-            help_message
         },
     };
 
