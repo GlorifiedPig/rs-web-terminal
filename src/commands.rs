@@ -1,5 +1,5 @@
 
-use std::sync::RwLock;
+use std::{sync::RwLock, time::SystemTime};
 
 type CommandCallback = fn(Vec<String>) -> String;
 
@@ -51,21 +51,26 @@ pub fn create_commands() {
 
     let date: Command = Command {
         command: "date",
-        description: "Shows the current date",
+        description: "Shows the current UTC date",
         callback: |_args: Vec<String>| {
-            String::from("Todo")
-        },
-    };
-
-    let regex = Command {
-        command: "regex",
-        description: "Matches a regex pattern",
-        callback: |_args: Vec<String>| {
-            String::from("Todo")
+            timestamp_to_date(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs())
         },
     };
 
     push_command(help);
     push_command(date);
-    push_command(regex);
+}
+
+pub fn timestamp_to_date(timestamp: u64) -> String {
+    let year = 1970 + (timestamp / 31556952);
+    let month = ((timestamp % 31556952) / 2629746) + 1;
+    let day = (timestamp % 2629746) / 86400;
+    let hour = (timestamp % 86400) / 3600;
+    let minute = (timestamp % 3600) / 60;
+    let second = timestamp % 60;
+
+    format!(
+        "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
+        year, month, day, hour, minute, second
+    )
 }
