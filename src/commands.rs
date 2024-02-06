@@ -61,7 +61,7 @@ pub fn create_commands() {
     push_command(date);
 }
 
-pub fn timestamp_to_date(timestamp: u64) -> String {
+fn timestamp_to_date(timestamp: u64) -> String {
     let year = 1970 + (timestamp / 31556952);
     let month = ((timestamp % 31556952) / 2629746) + 1;
     let day = (timestamp % 2629746) / 86400;
