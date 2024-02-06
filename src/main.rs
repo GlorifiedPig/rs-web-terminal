@@ -19,7 +19,7 @@ async fn main() {
         s.on("command", |s: SocketRef, Data::<String>(data)| {
             let mut args: Vec<String> = data.split(" ").map(|s| s.to_string()).collect();
             let command_str: String = args.remove(0);
-            let binding = commands::COMMANDS.lock().unwrap();
+            let binding = commands::COMMANDS.read().unwrap();
             let command: Option<&commands::Command> = binding.iter().find(|c| c.command == command_str);
 
             match command {

@@ -1,5 +1,5 @@
 
-use std::sync::Mutex;
+use std::sync::RwLock;
 
 type CommandCallback = fn(Vec<String>) -> String;
 
@@ -9,25 +9,49 @@ pub struct Command {
     pub callback: CommandCallback,
 }
 
-pub static COMMANDS: Mutex<Vec<Command>> = Mutex::new(Vec::new());
+pub static COMMANDS: RwLock<Vec<Command>> = RwLock::new(Vec::new());
+
+pub fn push_command(command: Command) {
+    match COMMANDS.write() {
+        Ok(mut commands) => {
+            commands.push(command);
+        },
+        Err(_) => {
+            println!("Unable to push command");
+        }
+    }
+}
 
 pub fn create_commands() {
-    let help: CommandCallback = |_args: Vec<String>| {
-        let mut help_message: String = String::from("Available commands:\n");
-        for command in COMMANDS.lock().unwrap().iter() {
-            help_message.push_str(&format!("{} - {}\n", command.command, command.description));
-        }
-        help_message
-    };
-
-    let help_command: Command = Command {
+    let help: Command = Command {
         command: "help",
         description: "Shows this help message",
-        callback: help,
+        callback: |_args: Vec<String>| {
+            let mut help_message: String = String::from("Available commands:");
+            for command in COMMANDS.read().unwrap().iter() {
+                help_message.push_str(&format!("\n{} - {}", command.command, command.description));
+            }
+            help_message
+        },
     };
 
-    // get current date command
-    // maybe a basic regex parser
+    let date: Command = Command {
+        command: "date",
+        description: "Shows the current date",
+        callback: |_args: Vec<String>| {
+            String::from("Todo")
+        },
+    };
 
-    COMMANDS.lock().unwrap().push(help_command);
+    let regex = Command {
+        command: "regex",
+        description: "Matches a regex pattern",
+        callback: |_args: Vec<String>| {
+            String::from("Todo")
+        },
+    };
+
+    push_command(help);
+    push_command(date);
+    push_command(regex);
 }
