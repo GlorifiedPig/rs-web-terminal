@@ -13,12 +13,8 @@ pub static COMMANDS: RwLock<Vec<Command>> = RwLock::new(Vec::new());
 
 pub fn push_command(command: Command) {
     match COMMANDS.write() {
-        Ok(mut commands) => {
-            commands.push(command);
-        },
-        Err(_) => {
-            println!("Unable to push command");
-        }
+        Ok(mut commands) => commands.push(command),
+        Err(_) => println!("Unable to push command")
     }
 }
 
@@ -32,12 +28,8 @@ pub fn create_commands() {
             if args.len() > 0 {
                 let command: Option<&Command> = commands.iter().find(|c| c.command == args[0]);
                 match command {
-                    Some(c) => {
-                        return format!("{} - {}", c.command, c.description);
-                    },
-                    None => {
-                        return format!("Command {} not found", args[0]);
-                    }
+                    Some(c) => format!("{} - {}", c.command, c.description),
+                    None => format!("Command {} not found", args[0])
                 }
             } else {
                 let mut help_message: String = String::from("Available commands:");
@@ -52,9 +44,7 @@ pub fn create_commands() {
     let date: Command = Command {
         command: "date",
         description: "Shows the current UTC date",
-        callback: |_args: Vec<String>| {
-            timestamp_to_date(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs())
-        },
+        callback: |_| timestamp_to_date(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()),
     };
 
     push_command(help);
